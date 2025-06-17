@@ -3,14 +3,14 @@
  * It includes state management, versioned tree data structures, and database integration.
  */
 
-import { StateMachine } from "../sm";
-import { TreeNodeJSON, TreeStateJSON, VersionedTree } from "../tree";
-import { prompt } from "../../utils/llm";
+import { StateMachine } from "./sm";
+import { TreeNodeJSON, TreeStateJSON, VersionedTree } from "./tree";
+import { prompt } from "../utils/llm";
 import { generateKeyPairSync, randomUUID } from "crypto";
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import sql from "../../utils/sql";
+import sql from "../utils/sql";
 
 /**
  * Defines all possible states that a persona can be in during its lifecycle.
@@ -797,95 +797,6 @@ export class PersonaSubAgent {
         };
     }
     
-    /**
-     * Processes a chat message and returns an AI response
-     * @param message User's input message
-     * @returns AI generated response
-     */
-    async processMessage(message: string): Promise<string> {
-        try {
-            // Get current persona state
-            const currentState = this.vt.getCurrentNode().data;
-            if (!currentState) {
-                throw new Error('No current persona state available');
-            }
-
-            // Build context from persona state
-            const context = this.buildPersonaContext(currentState);
-
-            // Generate LLM prompt
-            const systemPrompt = `You are an AI agent with the following traits and characteristics:
-${context}
-
-Respond to the user's message in a way that reflects your personality and knowledge.
-Keep responses concise and natural.`;
-
-            // Get response from LLM
-            const response = await prompt(systemPrompt, message);
-
-            let text = response.content[0].type === 'text' ? response.content[0].text : ''
-            // Store interaction in memories if significant
-            await this.updateMemories(message, text);
-
-            return text;
-
-        } catch (error) {
-            console.error('Error processing message:', error);
-            throw new Error('Failed to process message');
-        }
-    }
-
-    /**
-     * Builds a context string from persona state data
-     * @param state Current persona state
-     * @returns Formatted context string
-     */
-    private buildPersonaContext(state: PersonaStateData): string {
-        const sections = [
-            { title: "Personality Traits", items: state.personalityTraits },
-            { title: "Goals", items: state.goals },
-            { title: "Interests", items: state.interests },
-            { title: "Background", items: state.background },
-            { title: "Skills", items: state.skills },
-            { title: "Core Values", items: state.values },
-            { title: "Recent Memories", items: state.memories?.slice(-3) }
-        ];
-
-        return sections
-            .filter(section => section.items?.length)
-            .map(section => `${section.title}:\n- ${section.items.join('\n- ')}`)
-            .join('\n\n');
-    }
-
-    /**
-     * Updates agent memories with new interaction
-     * @param userMessage User's input message
-     * @param agentResponse Agent's response
-     */
-    private async updateMemories(userMessage: string, agentResponse: string): Promise<void> {
-        const currentNode = this.vt.getCurrentNode();
-        if (!currentNode?.data) return;
-
-        // Add new memory
-        const newMemory = `User: ${userMessage}\nResponse: ${agentResponse}`;
-        const memories = [...(currentNode.data.memories || []), newMemory];
-
-        // Keep only last 10 memories
-        if (memories.length > 10) {
-            memories.shift();
-        }
-
-        // Update state with new memories
-        await updateAgentPersona(this.agentId, {
-            memories
-        });
-
-        // Update tree node data
-        currentNode.data = {
-            ...currentNode.data,
-            memories
-        };
-    }
 }
 
 /**
