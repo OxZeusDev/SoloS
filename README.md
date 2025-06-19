@@ -1,6 +1,6 @@
 SoloS Artificial Intelligence
 =========================================
-![banner](https://ibb.co/fdRnF0k1)
+![banner](https://github.com/OxZeusDev/SoloS/blob/main/banner2(1).png)
 
 # Provable AI Agent Authenticity
 
