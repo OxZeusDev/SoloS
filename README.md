@@ -1,6 +1,6 @@
 SoloS Artificial Intelligence
 =========================================
-![banner](https://github.com/ALIVEcorp/SoloS/blob/main/routes/photo/banner2.png)
+![banner](https://ibb.co/fdRnF0k1)
 
 # Provable AI Agent Authenticity
 
